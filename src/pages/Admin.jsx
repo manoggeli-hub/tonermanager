@@ -693,6 +693,13 @@ export default function Admin() {
                   </SelectContent>
                 </Select>
               </div>
+              <div>
+                <Label>Bild</Label>
+                <ImageUpload
+                  value={newPrinterModel.image_url}
+                  onChange={(url) => setNewPrinterModel({...newPrinterModel, image_url: url})}
+                />
+              </div>
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setShowPrinterModelDialog(false)}>Abbrechen</Button>
@@ -755,6 +762,13 @@ export default function Admin() {
                     </SelectContent>
                   </Select>
                 </div>
+                <div>
+                  <Label>Bild</Label>
+                  <ImageUpload
+                    value={editingPrinterModel.image_url}
+                    onChange={(url) => setEditingPrinterModel({...editingPrinterModel, image_url: url})}
+                  />
+                </div>
               </div>
             )}
             <DialogFooter>
@@ -765,7 +779,8 @@ export default function Admin() {
                   data: { 
                     name: editingPrinterModel.name,
                     manufacturer_id: editingPrinterModel.manufacturer_id,
-                    toner_id: editingPrinterModel.toner_id
+                    toner_id: editingPrinterModel.toner_id,
+                    image_url: editingPrinterModel.image_url
                   }
                 })}
                 disabled={updatePrinterModelMutation.isPending}
@@ -824,6 +839,13 @@ export default function Admin() {
                   min={0}
                   value={newToner.stock}
                   onChange={(e) => setNewToner({...newToner, stock: parseInt(e.target.value) || 0})}
+                />
+              </div>
+              <div>
+                <Label>Bild</Label>
+                <ImageUpload
+                  value={newToner.image_url}
+                  onChange={(url) => setNewToner({...newToner, image_url: url})}
                 />
               </div>
             </div>
@@ -888,6 +910,13 @@ export default function Admin() {
                     onChange={(e) => setEditingToner({...editingToner, stock: parseInt(e.target.value) || 0})}
                   />
                 </div>
+                <div>
+                  <Label>Bild</Label>
+                  <ImageUpload
+                    value={editingToner.image_url}
+                    onChange={(url) => setEditingToner({...editingToner, image_url: url})}
+                  />
+                </div>
               </div>
             )}
             <DialogFooter>
@@ -899,7 +928,8 @@ export default function Admin() {
                     model: editingToner.model,
                     name: editingToner.name,
                     color: editingToner.color,
-                    stock: editingToner.stock
+                    stock: editingToner.stock,
+                    image_url: editingToner.image_url
                   }
                 })}
                 disabled={updateTonerMutation.isPending}
