@@ -22,6 +22,16 @@ export default function Home() {
     queryFn: () => base44.entities.Toner.list()
   });
 
+  const { data: manufacturers = [] } = useQuery({
+    queryKey: ['manufacturers'],
+    queryFn: () => base44.entities.Manufacturer.list()
+  });
+
+  const { data: printerModels = [] } = useQuery({
+    queryKey: ['printerModels'],
+    queryFn: () => base44.entities.PrinterModel.list()
+  });
+
   const { data: shelfConfigs = [] } = useQuery({
     queryKey: ['shelfConfig'],
     queryFn: () => base44.entities.ShelfConfig.list()
@@ -33,10 +43,34 @@ export default function Home() {
   });
 
   const shelfConfig = shelfConfigs[0] || { rows: 4, columns: 6 };
-  
-  const selectedToner = selectedPrinter?.toner_id 
-    ? toners.find(t => t.id === selectedPrinter.toner_id)
-    : null;
+
+  // Get toner for selected printer via PrinterModel
+  const getTonerForPrinter = (printer) => {
+    const printerModel = printerModels.find(m => m.id === printer?.printer_model_id);
+    if (!printerModel?.toner_id) return null;
+    return toners.find(t => t.id === printerModel.toner_id);
+  };
+
+  // Get display info for printer
+  const getPrinterDisplayInfo = (printer) => {
+    const printerModel = printerModels.find(m => m.id === printer?.printer_model_id);
+    const manufacturer = manufacturers.find(m => m.id === printerModel?.manufacturer_id);
+    return {
+      modelName: printerModel?.name || '',
+      manufacturerName: manufacturer?.name || ''
+    };
+  };
+
+  // Prepare printers with display info for selector
+  const printersWithInfo = printers.map(p => {
+    const info = getPrinterDisplayInfo(p);
+    return {
+      ...p,
+      model: `${info.manufacturerName} ${info.modelName}`.trim()
+    };
+  });
+
+  const selectedToner = selectedPrinter ? getTonerForPrinter(selectedPrinter) : null;
 
   const tonerPosition = selectedToner 
     ? positions.find(p => p.toner_id === selectedToner.id)
@@ -51,6 +85,8 @@ export default function Home() {
       </div>
     );
   }
+
+  const selectedPrinterInfo = selectedPrinter ? getPrinterDisplayInfo(selectedPrinter) : null;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
@@ -77,7 +113,7 @@ export default function Home() {
               exit={{ opacity: 0, x: -50 }}
             >
               <PrinterSelector
-                printers={printers}
+                printers={printersWithInfo}
                 onSelect={setSelectedPrinter}
                 searchValue={searchValue}
                 onSearchChange={setSearchValue}
@@ -104,7 +140,9 @@ export default function Home() {
               <div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100">
                 <div className="text-sm text-slate-500 mb-1">Dein Drucker</div>
                 <div className="font-semibold text-lg text-slate-800">{selectedPrinter.name}</div>
-                <div className="text-sm text-slate-600">{selectedPrinter.model}</div>
+                <div className="text-sm text-slate-600">
+                  {selectedPrinterInfo?.manufacturerName} {selectedPrinterInfo?.modelName}
+                </div>
               </div>
 
               {/* Toner Info */}
