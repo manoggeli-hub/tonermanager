@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { base44 } from '@/api/base44Client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { 
   Settings, Package, Printer, Grid3X3, Plus, Trash2, 
-  Save, Loader2, ChevronRight, X, Edit
+  Loader2, Edit, Building2, Cpu
 } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -20,13 +20,26 @@ export default function Admin() {
   const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState('shelf');
   const [selectedCell, setSelectedCell] = useState(null);
+  
+  // Dialog states
   const [showTonerDialog, setShowTonerDialog] = useState(false);
   const [showPrinterDialog, setShowPrinterDialog] = useState(false);
+  const [showManufacturerDialog, setShowManufacturerDialog] = useState(false);
+  const [showPrinterModelDialog, setShowPrinterModelDialog] = useState(false);
+  
+  // Edit states
   const [editingToner, setEditingToner] = useState(null);
   const [editingPrinter, setEditingPrinter] = useState(null);
+  const [editingManufacturer, setEditingManufacturer] = useState(null);
+  const [editingPrinterModel, setEditingPrinterModel] = useState(null);
+  
+  // New entity states
   const [newToner, setNewToner] = useState({ model: '', name: '', color: 'schwarz', stock: 0 });
-  const [newPrinter, setNewPrinter] = useState({ name: '', model: '', toner_id: '' });
+  const [newPrinter, setNewPrinter] = useState({ name: '', printer_model_id: '' });
+  const [newManufacturer, setNewManufacturer] = useState({ name: '' });
+  const [newPrinterModel, setNewPrinterModel] = useState({ name: '', manufacturer_id: '', toner_id: '' });
 
+  // Queries
   const { data: toners = [], isLoading: loadingToners } = useQuery({
     queryKey: ['toners'],
     queryFn: () => base44.entities.Toner.list()
@@ -35,6 +48,16 @@ export default function Admin() {
   const { data: printers = [], isLoading: loadingPrinters } = useQuery({
     queryKey: ['printers'],
     queryFn: () => base44.entities.Printer.list()
+  });
+
+  const { data: manufacturers = [] } = useQuery({
+    queryKey: ['manufacturers'],
+    queryFn: () => base44.entities.Manufacturer.list()
+  });
+
+  const { data: printerModels = [] } = useQuery({
+    queryKey: ['printerModels'],
+    queryFn: () => base44.entities.PrinterModel.list()
   });
 
   const { data: shelfConfigs = [] } = useQuery({
@@ -49,7 +72,7 @@ export default function Admin() {
 
   const shelfConfig = shelfConfigs[0] || { rows: 4, columns: 6 };
 
-  // Mutations
+  // Toner Mutations
   const createTonerMutation = useMutation({
     mutationFn: (data) => base44.entities.Toner.create(data),
     onSuccess: () => {
@@ -72,12 +95,59 @@ export default function Admin() {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['toners'] })
   });
 
+  // Manufacturer Mutations
+  const createManufacturerMutation = useMutation({
+    mutationFn: (data) => base44.entities.Manufacturer.create(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['manufacturers'] });
+      setShowManufacturerDialog(false);
+      setNewManufacturer({ name: '' });
+    }
+  });
+
+  const updateManufacturerMutation = useMutation({
+    mutationFn: ({ id, data }) => base44.entities.Manufacturer.update(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['manufacturers'] });
+      setEditingManufacturer(null);
+    }
+  });
+
+  const deleteManufacturerMutation = useMutation({
+    mutationFn: (id) => base44.entities.Manufacturer.delete(id),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['manufacturers'] })
+  });
+
+  // PrinterModel Mutations
+  const createPrinterModelMutation = useMutation({
+    mutationFn: (data) => base44.entities.PrinterModel.create(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['printerModels'] });
+      setShowPrinterModelDialog(false);
+      setNewPrinterModel({ name: '', manufacturer_id: '', toner_id: '' });
+    }
+  });
+
+  const updatePrinterModelMutation = useMutation({
+    mutationFn: ({ id, data }) => base44.entities.PrinterModel.update(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['printerModels'] });
+      setEditingPrinterModel(null);
+    }
+  });
+
+  const deletePrinterModelMutation = useMutation({
+    mutationFn: (id) => base44.entities.PrinterModel.delete(id),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['printerModels'] })
+  });
+
+  // Printer Mutations
   const createPrinterMutation = useMutation({
     mutationFn: (data) => base44.entities.Printer.create(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['printers'] });
       setShowPrinterDialog(false);
-      setNewPrinter({ name: '', model: '', toner_id: '' });
+      setNewPrinter({ name: '', printer_model_id: '' });
     }
   });
 
@@ -94,6 +164,7 @@ export default function Admin() {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['printers'] })
   });
 
+  // Shelf Mutations
   const updateShelfConfigMutation = useMutation({
     mutationFn: async (data) => {
       if (shelfConfigs[0]) {
@@ -127,6 +198,21 @@ export default function Admin() {
     setSelectedCell({ row, column, position, toner_id: position?.toner_id || '' });
   };
 
+  // Helper functions
+  const getManufacturerName = (id) => manufacturers.find(m => m.id === id)?.name || '';
+  const getTonerName = (id) => {
+    const toner = toners.find(t => t.id === id);
+    return toner ? `${toner.model} - ${toner.name}` : '';
+  };
+  const getPrinterModelInfo = (id) => {
+    const model = printerModels.find(m => m.id === id);
+    if (!model) return { name: '', manufacturer: '' };
+    return { 
+      name: model.name, 
+      manufacturer: getManufacturerName(model.manufacturer_id)
+    };
+  };
+
   if (loadingToners || loadingPrinters) {
     return (
       <div className="min-h-screen bg-slate-50 flex items-center justify-center">
@@ -137,7 +223,7 @@ export default function Admin() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
-      <div className="max-w-4xl mx-auto px-4 py-6">
+      <div className="max-w-4xl mx-auto px-4 py-6 pb-24">
         {/* Header */}
         <motion.div 
           initial={{ opacity: 0, y: -20 }}
@@ -149,23 +235,31 @@ export default function Admin() {
           </div>
           <div>
             <h1 className="text-2xl font-bold text-slate-800">Admin-Bereich</h1>
-            <p className="text-slate-500">Toner & Regal verwalten</p>
+            <p className="text-slate-500">Toner, Drucker & Regal verwalten</p>
           </div>
         </motion.div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid w-full grid-cols-3 mb-6">
-            <TabsTrigger value="shelf" className="flex items-center gap-2">
+          <TabsList className="grid w-full grid-cols-5 mb-6">
+            <TabsTrigger value="shelf" className="flex items-center gap-1 text-xs">
               <Grid3X3 className="w-4 h-4" />
-              Regal
+              <span className="hidden sm:inline">Regal</span>
             </TabsTrigger>
-            <TabsTrigger value="toners" className="flex items-center gap-2">
+            <TabsTrigger value="manufacturers" className="flex items-center gap-1 text-xs">
+              <Building2 className="w-4 h-4" />
+              <span className="hidden sm:inline">Hersteller</span>
+            </TabsTrigger>
+            <TabsTrigger value="models" className="flex items-center gap-1 text-xs">
+              <Cpu className="w-4 h-4" />
+              <span className="hidden sm:inline">Modelle</span>
+            </TabsTrigger>
+            <TabsTrigger value="toners" className="flex items-center gap-1 text-xs">
               <Package className="w-4 h-4" />
-              Toner
+              <span className="hidden sm:inline">Toner</span>
             </TabsTrigger>
-            <TabsTrigger value="printers" className="flex items-center gap-2">
+            <TabsTrigger value="printers" className="flex items-center gap-1 text-xs">
               <Printer className="w-4 h-4" />
-              Drucker
+              <span className="hidden sm:inline">Drucker</span>
             </TabsTrigger>
           </TabsList>
 
@@ -225,10 +319,114 @@ export default function Admin() {
             </Card>
           </TabsContent>
 
+          {/* Hersteller Tab */}
+          <TabsContent value="manufacturers" className="space-y-4">
+            <div className="flex justify-between items-center">
+              <h2 className="text-lg font-semibold">Hersteller</h2>
+              <Button onClick={() => setShowManufacturerDialog(true)} className="flex items-center gap-2">
+                <Plus className="w-4 h-4" />
+                Neuer Hersteller
+              </Button>
+            </div>
+
+            <div className="space-y-2">
+              {manufacturers.map((manufacturer) => {
+                const modelCount = printerModels.filter(m => m.manufacturer_id === manufacturer.id).length;
+                return (
+                  <motion.div
+                    key={manufacturer.id}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    className="bg-white rounded-xl p-4 border border-slate-100 flex items-center gap-4"
+                  >
+                    <div className="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center">
+                      <Building2 className="w-5 h-5 text-blue-600" />
+                    </div>
+                    <div className="flex-1">
+                      <div className="font-medium">{manufacturer.name}</div>
+                      <div className="text-sm text-slate-500">{modelCount} Modell(e)</div>
+                    </div>
+                    <Button variant="ghost" size="icon" onClick={() => setEditingManufacturer(manufacturer)}>
+                      <Edit className="w-4 h-4" />
+                    </Button>
+                    <Button variant="ghost" size="icon" onClick={() => deleteManufacturerMutation.mutate(manufacturer.id)}>
+                      <Trash2 className="w-4 h-4 text-red-500" />
+                    </Button>
+                  </motion.div>
+                );
+              })}
+
+              {manufacturers.length === 0 && (
+                <div className="text-center py-12 text-slate-500">
+                  <Building2 className="w-12 h-12 mx-auto mb-3 opacity-30" />
+                  <p>Noch keine Hersteller angelegt</p>
+                </div>
+              )}
+            </div>
+          </TabsContent>
+
+          {/* Drucker-Modelle Tab */}
+          <TabsContent value="models" className="space-y-4">
+            <div className="flex justify-between items-center">
+              <h2 className="text-lg font-semibold">Drucker-Modelle</h2>
+              <Button onClick={() => setShowPrinterModelDialog(true)} className="flex items-center gap-2">
+                <Plus className="w-4 h-4" />
+                Neues Modell
+              </Button>
+            </div>
+
+            <div className="space-y-2">
+              {manufacturers.map((manufacturer) => {
+                const models = printerModels.filter(m => m.manufacturer_id === manufacturer.id);
+                if (models.length === 0) return null;
+                
+                return (
+                  <div key={manufacturer.id} className="space-y-2">
+                    <h3 className="text-sm font-medium text-slate-500 mt-4">{manufacturer.name}</h3>
+                    {models.map((model) => {
+                      const toner = toners.find(t => t.id === model.toner_id);
+                      return (
+                        <motion.div
+                          key={model.id}
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          className="bg-white rounded-xl p-4 border border-slate-100 flex items-center gap-4"
+                        >
+                          <div className="w-10 h-10 rounded-lg bg-purple-100 flex items-center justify-center">
+                            <Cpu className="w-5 h-5 text-purple-600" />
+                          </div>
+                          <div className="flex-1">
+                            <div className="font-medium">{model.name}</div>
+                            {toner && (
+                              <div className="text-sm text-slate-500">Toner: {toner.model}</div>
+                            )}
+                          </div>
+                          <Button variant="ghost" size="icon" onClick={() => setEditingPrinterModel(model)}>
+                            <Edit className="w-4 h-4" />
+                          </Button>
+                          <Button variant="ghost" size="icon" onClick={() => deletePrinterModelMutation.mutate(model.id)}>
+                            <Trash2 className="w-4 h-4 text-red-500" />
+                          </Button>
+                        </motion.div>
+                      );
+                    })}
+                  </div>
+                );
+              })}
+
+              {printerModels.length === 0 && (
+                <div className="text-center py-12 text-slate-500">
+                  <Cpu className="w-12 h-12 mx-auto mb-3 opacity-30" />
+                  <p>Noch keine Drucker-Modelle angelegt</p>
+                </div>
+              )}
+            </div>
+          </TabsContent>
+
           {/* Toner Tab */}
           <TabsContent value="toners" className="space-y-4">
             <div className="flex justify-between items-center">
-              <h2 className="text-lg font-semibold">Toner-Modelle</h2>
+              <h2 className="text-lg font-semibold">Toner</h2>
               <Button onClick={() => setShowTonerDialog(true)} className="flex items-center gap-2">
                 <Plus className="w-4 h-4" />
                 Neuer Toner
@@ -265,11 +463,7 @@ export default function Admin() {
                   <Button variant="ghost" size="icon" onClick={() => setEditingToner(toner)}>
                     <Edit className="w-4 h-4" />
                   </Button>
-                  <Button 
-                    variant="ghost" 
-                    size="icon"
-                    onClick={() => deleteTonerMutation.mutate(toner.id)}
-                  >
+                  <Button variant="ghost" size="icon" onClick={() => deleteTonerMutation.mutate(toner.id)}>
                     <Trash2 className="w-4 h-4 text-red-500" />
                   </Button>
                 </motion.div>
@@ -287,7 +481,7 @@ export default function Admin() {
           {/* Drucker Tab */}
           <TabsContent value="printers" className="space-y-4">
             <div className="flex justify-between items-center">
-              <h2 className="text-lg font-semibold">Drucker</h2>
+              <h2 className="text-lg font-semibold">Drucker (Standorte)</h2>
               <Button onClick={() => setShowPrinterDialog(true)} className="flex items-center gap-2">
                 <Plus className="w-4 h-4" />
                 Neuer Drucker
@@ -296,7 +490,7 @@ export default function Admin() {
 
             <div className="space-y-2">
               {printers.map((printer) => {
-                const assignedToner = toners.find(t => t.id === printer.toner_id);
+                const modelInfo = getPrinterModelInfo(printer.printer_model_id);
                 return (
                   <motion.div
                     key={printer.id}
@@ -309,21 +503,14 @@ export default function Admin() {
                     </div>
                     <div className="flex-1">
                       <div className="font-medium">{printer.name}</div>
-                      <div className="text-sm text-slate-500">{printer.model}</div>
-                    </div>
-                    {assignedToner && (
-                      <div className="text-sm bg-slate-100 px-3 py-1 rounded-full">
-                        {assignedToner.model}
+                      <div className="text-sm text-slate-500">
+                        {modelInfo.manufacturer} {modelInfo.name}
                       </div>
-                    )}
+                    </div>
                     <Button variant="ghost" size="icon" onClick={() => setEditingPrinter(printer)}>
                       <Edit className="w-4 h-4" />
                     </Button>
-                    <Button 
-                      variant="ghost" 
-                      size="icon"
-                      onClick={() => deletePrinterMutation.mutate(printer.id)}
-                    >
+                    <Button variant="ghost" size="icon" onClick={() => deletePrinterMutation.mutate(printer.id)}>
                       <Trash2 className="w-4 h-4 text-red-500" />
                     </Button>
                   </motion.div>
@@ -381,6 +568,200 @@ export default function Admin() {
                 disabled={updatePositionMutation.isPending}
               >
                 {updatePositionMutation.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+                Speichern
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* New Manufacturer Dialog */}
+        <Dialog open={showManufacturerDialog} onOpenChange={setShowManufacturerDialog}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Neuen Hersteller anlegen</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div>
+                <Label>Name</Label>
+                <Input
+                  value={newManufacturer.name}
+                  onChange={(e) => setNewManufacturer({...newManufacturer, name: e.target.value})}
+                  placeholder="z.B. Brother, HP, Canon"
+                />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setShowManufacturerDialog(false)}>Abbrechen</Button>
+              <Button 
+                onClick={() => createManufacturerMutation.mutate(newManufacturer)}
+                disabled={!newManufacturer.name || createManufacturerMutation.isPending}
+              >
+                {createManufacturerMutation.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+                Erstellen
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Edit Manufacturer Dialog */}
+        <Dialog open={!!editingManufacturer} onOpenChange={() => setEditingManufacturer(null)}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Hersteller bearbeiten</DialogTitle>
+            </DialogHeader>
+            {editingManufacturer && (
+              <div className="space-y-4">
+                <div>
+                  <Label>Name</Label>
+                  <Input
+                    value={editingManufacturer.name}
+                    onChange={(e) => setEditingManufacturer({...editingManufacturer, name: e.target.value})}
+                  />
+                </div>
+              </div>
+            )}
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setEditingManufacturer(null)}>Abbrechen</Button>
+              <Button 
+                onClick={() => updateManufacturerMutation.mutate({ 
+                  id: editingManufacturer.id, 
+                  data: { name: editingManufacturer.name }
+                })}
+                disabled={updateManufacturerMutation.isPending}
+              >
+                {updateManufacturerMutation.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+                Speichern
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* New PrinterModel Dialog */}
+        <Dialog open={showPrinterModelDialog} onOpenChange={setShowPrinterModelDialog}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Neues Drucker-Modell anlegen</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div>
+                <Label>Hersteller</Label>
+                <Select
+                  value={newPrinterModel.manufacturer_id || ''}
+                  onValueChange={(value) => setNewPrinterModel({...newPrinterModel, manufacturer_id: value})}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Hersteller auswählen" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {manufacturers.map(m => (
+                      <SelectItem key={m.id} value={m.id}>{m.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label>Modellname</Label>
+                <Input
+                  value={newPrinterModel.name}
+                  onChange={(e) => setNewPrinterModel({...newPrinterModel, name: e.target.value})}
+                  placeholder="z.B. HL-L2370DN"
+                />
+              </div>
+              <div>
+                <Label>Benötigter Toner</Label>
+                <Select
+                  value={newPrinterModel.toner_id || 'none'}
+                  onValueChange={(value) => setNewPrinterModel({...newPrinterModel, toner_id: value === 'none' ? '' : value})}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Toner auswählen" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">Kein Toner</SelectItem>
+                    {toners.map(t => (
+                      <SelectItem key={t.id} value={t.id}>{t.model} - {t.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setShowPrinterModelDialog(false)}>Abbrechen</Button>
+              <Button 
+                onClick={() => createPrinterModelMutation.mutate(newPrinterModel)}
+                disabled={!newPrinterModel.name || !newPrinterModel.manufacturer_id || createPrinterModelMutation.isPending}
+              >
+                {createPrinterModelMutation.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+                Erstellen
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Edit PrinterModel Dialog */}
+        <Dialog open={!!editingPrinterModel} onOpenChange={() => setEditingPrinterModel(null)}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Drucker-Modell bearbeiten</DialogTitle>
+            </DialogHeader>
+            {editingPrinterModel && (
+              <div className="space-y-4">
+                <div>
+                  <Label>Hersteller</Label>
+                  <Select
+                    value={editingPrinterModel.manufacturer_id || ''}
+                    onValueChange={(value) => setEditingPrinterModel({...editingPrinterModel, manufacturer_id: value})}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Hersteller auswählen" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {manufacturers.map(m => (
+                        <SelectItem key={m.id} value={m.id}>{m.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label>Modellname</Label>
+                  <Input
+                    value={editingPrinterModel.name}
+                    onChange={(e) => setEditingPrinterModel({...editingPrinterModel, name: e.target.value})}
+                  />
+                </div>
+                <div>
+                  <Label>Benötigter Toner</Label>
+                  <Select
+                    value={editingPrinterModel.toner_id || 'none'}
+                    onValueChange={(value) => setEditingPrinterModel({...editingPrinterModel, toner_id: value === 'none' ? '' : value})}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Toner auswählen" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">Kein Toner</SelectItem>
+                      {toners.map(t => (
+                        <SelectItem key={t.id} value={t.id}>{t.model} - {t.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            )}
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setEditingPrinterModel(null)}>Abbrechen</Button>
+              <Button 
+                onClick={() => updatePrinterModelMutation.mutate({ 
+                  id: editingPrinterModel.id, 
+                  data: { 
+                    name: editingPrinterModel.name,
+                    manufacturer_id: editingPrinterModel.manufacturer_id,
+                    toner_id: editingPrinterModel.toner_id
+                  }
+                })}
+                disabled={updatePrinterModelMutation.isPending}
+              >
+                {updatePrinterModelMutation.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
                 Speichern
               </Button>
             </DialogFooter>
@@ -537,27 +918,29 @@ export default function Admin() {
                 />
               </div>
               <div>
-                <Label>Modell</Label>
-                <Input
-                  value={newPrinter.model}
-                  onChange={(e) => setNewPrinter({...newPrinter, model: e.target.value})}
-                  placeholder="z.B. Brother HL-L2350DW"
-                />
-              </div>
-              <div>
-                <Label>Toner</Label>
+                <Label>Drucker-Modell</Label>
                 <Select
-                  value={newPrinter.toner_id || 'none'}
-                  onValueChange={(value) => setNewPrinter({...newPrinter, toner_id: value === 'none' ? '' : value})}
+                  value={newPrinter.printer_model_id || ''}
+                  onValueChange={(value) => setNewPrinter({...newPrinter, printer_model_id: value})}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Toner auswählen" />
+                    <SelectValue placeholder="Modell auswählen" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="none">Kein Toner</SelectItem>
-                    {toners.map(t => (
-                      <SelectItem key={t.id} value={t.id}>{t.model} - {t.name}</SelectItem>
-                    ))}
+                    {manufacturers.map(m => {
+                      const models = printerModels.filter(pm => pm.manufacturer_id === m.id);
+                      if (models.length === 0) return null;
+                      return (
+                        <React.Fragment key={m.id}>
+                          <div className="px-2 py-1.5 text-xs font-semibold text-slate-500">{m.name}</div>
+                          {models.map(model => (
+                            <SelectItem key={model.id} value={model.id}>
+                              {model.name}
+                            </SelectItem>
+                          ))}
+                        </React.Fragment>
+                      );
+                    })}
                   </SelectContent>
                 </Select>
               </div>
@@ -566,7 +949,7 @@ export default function Admin() {
               <Button variant="outline" onClick={() => setShowPrinterDialog(false)}>Abbrechen</Button>
               <Button 
                 onClick={() => createPrinterMutation.mutate(newPrinter)}
-                disabled={!newPrinter.name || !newPrinter.model || createPrinterMutation.isPending}
+                disabled={!newPrinter.name || !newPrinter.printer_model_id || createPrinterMutation.isPending}
               >
                 {createPrinterMutation.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
                 Erstellen
@@ -591,26 +974,29 @@ export default function Admin() {
                   />
                 </div>
                 <div>
-                  <Label>Modell</Label>
-                  <Input
-                    value={editingPrinter.model}
-                    onChange={(e) => setEditingPrinter({...editingPrinter, model: e.target.value})}
-                  />
-                </div>
-                <div>
-                  <Label>Toner</Label>
+                  <Label>Drucker-Modell</Label>
                   <Select
-                    value={editingPrinter.toner_id || 'none'}
-                    onValueChange={(value) => setEditingPrinter({...editingPrinter, toner_id: value === 'none' ? '' : value})}
+                    value={editingPrinter.printer_model_id || ''}
+                    onValueChange={(value) => setEditingPrinter({...editingPrinter, printer_model_id: value})}
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder="Toner auswählen" />
+                      <SelectValue placeholder="Modell auswählen" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="none">Kein Toner</SelectItem>
-                      {toners.map(t => (
-                        <SelectItem key={t.id} value={t.id}>{t.model} - {t.name}</SelectItem>
-                      ))}
+                      {manufacturers.map(m => {
+                        const models = printerModels.filter(pm => pm.manufacturer_id === m.id);
+                        if (models.length === 0) return null;
+                        return (
+                          <React.Fragment key={m.id}>
+                            <div className="px-2 py-1.5 text-xs font-semibold text-slate-500">{m.name}</div>
+                            {models.map(model => (
+                              <SelectItem key={model.id} value={model.id}>
+                                {model.name}
+                              </SelectItem>
+                            ))}
+                          </React.Fragment>
+                        );
+                      })}
                     </SelectContent>
                   </Select>
                 </div>
@@ -623,8 +1009,7 @@ export default function Admin() {
                   id: editingPrinter.id, 
                   data: { 
                     name: editingPrinter.name,
-                    model: editingPrinter.model,
-                    toner_id: editingPrinter.toner_id
+                    printer_model_id: editingPrinter.printer_model_id
                   }
                 })}
                 disabled={updatePrinterMutation.isPending}
