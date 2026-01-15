@@ -393,9 +393,13 @@ export default function Admin() {
                           animate={{ opacity: 1 }}
                           className="bg-white rounded-xl p-4 border border-slate-100 flex items-center gap-4"
                         >
-                          <div className="w-10 h-10 rounded-lg bg-purple-100 flex items-center justify-center">
-                            <Cpu className="w-5 h-5 text-purple-600" />
-                          </div>
+                          {model.image_url ? (
+                            <img src={model.image_url} alt={model.name} className="w-10 h-10 rounded-lg object-cover" />
+                          ) : (
+                            <div className="w-10 h-10 rounded-lg bg-purple-100 flex items-center justify-center">
+                              <Cpu className="w-5 h-5 text-purple-600" />
+                            </div>
+                          )}
                           <div className="flex-1">
                             <div className="font-medium">{model.name}</div>
                             {toner && (
@@ -442,18 +446,22 @@ export default function Admin() {
                   animate={{ opacity: 1 }}
                   className="bg-white rounded-xl p-4 border border-slate-100 flex items-center gap-4"
                 >
-                  <div className={cn(
-                    "w-10 h-10 rounded-lg flex items-center justify-center",
-                    toner.color === 'schwarz' && "bg-slate-800",
-                    toner.color === 'cyan' && "bg-cyan-500",
-                    toner.color === 'magenta' && "bg-pink-500",
-                    toner.color === 'gelb' && "bg-yellow-400"
-                  )}>
-                    <Package className={cn(
-                      "w-5 h-5",
-                      toner.color === 'gelb' ? 'text-amber-900' : 'text-white'
-                    )} />
-                  </div>
+                  {toner.image_url ? (
+                    <img src={toner.image_url} alt={toner.model} className="w-10 h-10 rounded-lg object-cover" />
+                  ) : (
+                    <div className={cn(
+                      "w-10 h-10 rounded-lg flex items-center justify-center",
+                      toner.color === 'schwarz' && "bg-slate-800",
+                      toner.color === 'cyan' && "bg-cyan-500",
+                      toner.color === 'magenta' && "bg-pink-500",
+                      toner.color === 'gelb' && "bg-yellow-400"
+                    )}>
+                      <Package className={cn(
+                        "w-5 h-5",
+                        toner.color === 'gelb' ? 'text-amber-900' : 'text-white'
+                      )} />
+                    </div>
+                  )}
                   <div className="flex-1">
                     <div className="font-medium">{toner.model}</div>
                     <div className="text-sm text-slate-500">{toner.name}</div>
