@@ -14,6 +14,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import ShelfGrid from '@/components/shelf/ShelfGrid';
+import ImageUpload from '@/components/common/ImageUpload';
 import { cn } from "@/lib/utils";
 
 export default function Admin() {
@@ -34,10 +35,10 @@ export default function Admin() {
   const [editingPrinterModel, setEditingPrinterModel] = useState(null);
   
   // New entity states
-  const [newToner, setNewToner] = useState({ model: '', name: '', color: 'schwarz', stock: 0 });
+  const [newToner, setNewToner] = useState({ model: '', name: '', color: 'schwarz', stock: 0, image_url: '' });
   const [newPrinter, setNewPrinter] = useState({ name: '', printer_model_id: '' });
   const [newManufacturer, setNewManufacturer] = useState({ name: '' });
-  const [newPrinterModel, setNewPrinterModel] = useState({ name: '', manufacturer_id: '', toner_id: '' });
+  const [newPrinterModel, setNewPrinterModel] = useState({ name: '', manufacturer_id: '', toner_id: '', image_url: '' });
 
   // Queries
   const { data: toners = [], isLoading: loadingToners } = useQuery({
@@ -78,7 +79,7 @@ export default function Admin() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['toners'] });
       setShowTonerDialog(false);
-      setNewToner({ model: '', name: '', color: 'schwarz', stock: 0 });
+      setNewToner({ model: '', name: '', color: 'schwarz', stock: 0, image_url: '' });
     }
   });
 
@@ -124,7 +125,7 @@ export default function Admin() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['printerModels'] });
       setShowPrinterModelDialog(false);
-      setNewPrinterModel({ name: '', manufacturer_id: '', toner_id: '' });
+      setNewPrinterModel({ name: '', manufacturer_id: '', toner_id: '', image_url: '' });
     }
   });
 
