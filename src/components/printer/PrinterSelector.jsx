@@ -37,9 +37,13 @@ export default function PrinterSelector({ printers, onSelect, searchValue, onSea
               "active:scale-[0.98]"
             )}
           >
-            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-500 to-indigo-600 flex items-center justify-center flex-shrink-0">
-              <Printer className="w-6 h-6 text-white" />
-            </div>
+            {printer.image_url ? (
+              <img src={printer.image_url} alt={printer.name} className="w-12 h-12 rounded-xl object-cover flex-shrink-0" />
+            ) : (
+              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-500 to-indigo-600 flex items-center justify-center flex-shrink-0">
+                <Printer className="w-6 h-6 text-white" />
+              </div>
+            )}
             <div className="flex-1 min-w-0">
               <h3 className="font-semibold text-slate-800 truncate">{printer.name}</h3>
               <p className="text-sm text-slate-500 truncate">{printer.model}</p>
