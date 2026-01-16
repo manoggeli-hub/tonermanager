@@ -1,9 +1,10 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Package, MapPin } from 'lucide-react';
+import { Package, MapPin, Plus, Minus } from 'lucide-react';
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 
-export default function TonerCard({ toner, position, isHighlighted }) {
+export default function TonerCard({ toner, position, isHighlighted, onStockChange }) {
   const getTonerColor = () => {
     const colors = {
       schwarz: 'from-slate-700 to-slate-900',
@@ -55,7 +56,29 @@ export default function TonerCard({ toner, position, isHighlighted }) {
         <div className={cn("mt-4 pt-4 border-t border-white/20", getTextColor())}>
           <div className="flex justify-between items-center">
             <span className="text-sm opacity-80">Bestand</span>
-            <span className="text-xl font-bold">{toner.stock} Stück</span>
+            {onStockChange ? (
+              <div className="flex items-center gap-3">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 bg-white/20 hover:bg-white/30"
+                  onClick={() => onStockChange(Math.max(0, (toner.stock || 0) - 1))}
+                >
+                  <Minus className="w-4 h-4" />
+                </Button>
+                <span className="text-xl font-bold min-w-[60px] text-center">{toner.stock}</span>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 bg-white/20 hover:bg-white/30"
+                  onClick={() => onStockChange((toner.stock || 0) + 1)}
+                >
+                  <Plus className="w-4 h-4" />
+                </Button>
+              </div>
+            ) : (
+              <span className="text-xl font-bold">{toner.stock} Stück</span>
+            )}
           </div>
         </div>
       )}
