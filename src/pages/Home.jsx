@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { base44 } from '@/api/base44Client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, Printer, Loader2 } from 'lucide-react';
+import { ArrowLeft, Printer, Loader2, Package } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import PrinterSelector from '@/components/printer/PrinterSelector';
 import ShelfGrid from '@/components/shelf/ShelfGrid';
@@ -32,17 +32,15 @@ export default function Home() {
     queryFn: () => base44.entities.PrinterModel.list()
   });
 
-  const { data: shelfConfigs = [] } = useQuery({
-    queryKey: ['shelfConfig'],
-    queryFn: () => base44.entities.ShelfConfig.list()
+  const { data: cabinets = [] } = useQuery({
+    queryKey: ['cabinets'],
+    queryFn: () => base44.entities.Cabinet.list()
   });
 
   const { data: positions = [] } = useQuery({
     queryKey: ['positions'],
     queryFn: () => base44.entities.ShelfPosition.list()
   });
-
-  const shelfConfig = shelfConfigs[0] || { rows: 4, columns: 6 };
 
   // Get toners for selected printer via PrinterModel
   const getTonersForPrinter = (printer) => {
@@ -169,18 +167,24 @@ export default function Home() {
                     )}
                   </div>
 
-                  {/* Regal-Ansicht */}
+                  {/* Schrank-Ansicht */}
                   <div>
                     <h3 className="text-sm font-medium text-slate-600 mb-3 text-center">
-                      Position im Regal
+                      Position im Schrank
                     </h3>
-                    <ShelfGrid
-                  rows={shelfConfig.rows}
-                  columns={shelfConfig.columns}
-                  positions={positions}
-                  toners={toners}
-                  highlightTonerIds={highlightTonerIds} />
-
+                    <div className="space-y-6">
+                      {cabinets.map(cabinet => (
+                        <ShelfGrid
+                          key={cabinet.id}
+                          rows={cabinet.rows || 4}
+                          columns={cabinet.columns || 6}
+                          positions={positions.filter(p => p.cabinet_id === cabinet.id)}
+                          toners={toners}
+                          highlightTonerIds={highlightTonerIds}
+                          cabinetName={cabinet.name}
+                        />
+                      ))}
+                    </div>
                   </div>
                 </> :
 
