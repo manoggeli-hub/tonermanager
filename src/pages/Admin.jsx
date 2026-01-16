@@ -4,7 +4,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import { 
   Settings, Package, Printer, Grid3X3, Plus, Trash2, 
-  Loader2, Edit, Building2, Cpu
+  Loader2, Edit, Building2, Cpu, Archive
 } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -61,9 +61,9 @@ export default function Admin() {
     queryFn: () => base44.entities.PrinterModel.list()
   });
 
-  const { data: shelfConfigs = [] } = useQuery({
-    queryKey: ['shelfConfig'],
-    queryFn: () => base44.entities.ShelfConfig.list()
+  const { data: cabinets = [] } = useQuery({
+    queryKey: ['cabinets'],
+    queryFn: () => base44.entities.Cabinet.list()
   });
 
   const { data: positions = [] } = useQuery({
@@ -71,7 +71,15 @@ export default function Admin() {
     queryFn: () => base44.entities.ShelfPosition.list()
   });
 
-  const shelfConfig = shelfConfigs[0] || { rows: 4, columns: 6 };
+  const [selectedCabinetId, setSelectedCabinetId] = useState(null);
+  const selectedCabinet = cabinets.find(c => c.id === selectedCabinetId) || cabinets[0];
+  
+  // Set initial cabinet when loaded
+  React.useEffect(() => {
+    if (cabinets.length > 0 && !selectedCabinetId) {
+      setSelectedCabinetId(cabinets[0].id);
+    }
+  }, [cabinets, selectedCabinetId]);
 
   // Toner Mutations
   const createTonerMutation = useMutation({
@@ -165,20 +173,25 @@ export default function Admin() {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['printers'] })
   });
 
-  // Shelf Mutations
-  const updateShelfConfigMutation = useMutation({
-    mutationFn: async (data) => {
-      if (shelfConfigs[0]) {
-        return base44.entities.ShelfConfig.update(shelfConfigs[0].id, data);
-      }
-      return base44.entities.ShelfConfig.create(data);
-    },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['shelfConfig'] })
+  // Cabinet Mutations
+  const createCabinetMutation = useMutation({
+    mutationFn: (data) => base44.entities.Cabinet.create(data),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['cabinets'] })
+  });
+
+  const updateCabinetMutation = useMutation({
+    mutationFn: ({ id, data }) => base44.entities.Cabinet.update(id, data),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['cabinets'] })
+  });
+
+  const deleteCabinetMutation = useMutation({
+    mutationFn: (id) => base44.entities.Cabinet.delete(id),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['cabinets'] })
   });
 
   const updatePositionMutation = useMutation({
-    mutationFn: async ({ row, column, toner_id }) => {
-      const existing = positions.find(p => p.row === row && p.column === column);
+    mutationFn: async ({ cabinet_id, row, column, toner_id }) => {
+      const existing = positions.find(p => p.cabinet_id === cabinet_id && p.row === row && p.column === column);
       if (existing) {
         if (toner_id) {
           return base44.entities.ShelfPosition.update(existing.id, { toner_id });
@@ -186,7 +199,7 @@ export default function Admin() {
           return base44.entities.ShelfPosition.delete(existing.id);
         }
       } else if (toner_id) {
-        return base44.entities.ShelfPosition.create({ row, column, toner_id });
+        return base44.entities.ShelfPosition.create({ cabinet_id, row, column, toner_id });
       }
     },
     onSuccess: () => {
@@ -196,7 +209,7 @@ export default function Admin() {
   });
 
   const handleCellClick = (row, column, position) => {
-    setSelectedCell({ row, column, position, toner_id: position?.toner_id || '' });
+    setSelectedCell({ row, column, position, toner_id: position?.toner_id || '', cabinet_id: selectedCabinet?.id });
   };
 
   // Helper functions
@@ -243,8 +256,8 @@ export default function Admin() {
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList className="grid w-full grid-cols-5 mb-6">
             <TabsTrigger value="shelf" className="flex items-center gap-1 text-xs">
-              <Grid3X3 className="w-4 h-4" />
-              <span className="hidden sm:inline">Regal</span>
+              <Archive className="w-4 h-4" />
+              <span className="hidden sm:inline">Schränke</span>
             </TabsTrigger>
             <TabsTrigger value="manufacturers" className="flex items-center gap-1 text-xs">
               <Building2 className="w-4 h-4" />
@@ -264,60 +277,119 @@ export default function Admin() {
             </TabsTrigger>
           </TabsList>
 
-          {/* Regal Tab */}
+          {/* Schränke Tab */}
           <TabsContent value="shelf" className="space-y-6">
             <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">Regal-Konfiguration</CardTitle>
+              <CardHeader className="flex flex-row items-center justify-between">
+                <CardTitle className="text-lg">Schränke</CardTitle>
+                <Button 
+                  size="sm"
+                  onClick={() => createCabinetMutation.mutate({ name: `Schrank ${cabinets.length + 1}`, rows: 4, columns: 6 })}
+                >
+                  <Plus className="w-4 h-4 mr-1" />
+                  Neuer Schrank
+                </Button>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label>Reihen</Label>
-                    <Input
-                      type="number"
-                      min={1}
-                      max={10}
-                      value={shelfConfig.rows}
-                      onChange={(e) => updateShelfConfigMutation.mutate({ 
-                        ...shelfConfig, 
-                        rows: parseInt(e.target.value) || 1 
-                      })}
-                    />
+                {cabinets.length === 0 ? (
+                  <div className="text-center py-8 text-slate-500">
+                    <Archive className="w-12 h-12 mx-auto mb-3 opacity-30" />
+                    <p>Noch keine Schränke angelegt</p>
                   </div>
-                  <div>
-                    <Label>Fächer pro Reihe</Label>
-                    <Input
-                      type="number"
-                      min={1}
-                      max={12}
-                      value={shelfConfig.columns}
-                      onChange={(e) => updateShelfConfigMutation.mutate({ 
-                        ...shelfConfig, 
-                        columns: parseInt(e.target.value) || 1 
-                      })}
-                    />
+                ) : (
+                  <div className="flex flex-wrap gap-2">
+                    {cabinets.map((cabinet) => (
+                      <Button
+                        key={cabinet.id}
+                        variant={selectedCabinetId === cabinet.id ? "default" : "outline"}
+                        onClick={() => setSelectedCabinetId(cabinet.id)}
+                      >
+                        {cabinet.name}
+                      </Button>
+                    ))}
                   </div>
-                </div>
+                )}
               </CardContent>
             </Card>
 
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">Toner-Positionen festlegen</CardTitle>
-                <p className="text-sm text-slate-500">Klicke auf ein Fach, um einen Toner zuzuweisen</p>
-              </CardHeader>
-              <CardContent>
-                <ShelfGrid
-                  rows={shelfConfig.rows}
-                  columns={shelfConfig.columns}
-                  positions={positions}
-                  toners={toners}
-                  onCellClick={handleCellClick}
-                  editable
-                />
-              </CardContent>
-            </Card>
+            {selectedCabinet && (
+              <>
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg">Schrank: {selectedCabinet.name}</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="grid grid-cols-3 gap-4">
+                      <div>
+                        <Label>Name</Label>
+                        <Input
+                          value={selectedCabinet.name}
+                          onChange={(e) => updateCabinetMutation.mutate({ 
+                            id: selectedCabinet.id, 
+                            data: { name: e.target.value }
+                          })}
+                        />
+                      </div>
+                      <div>
+                        <Label>Reihen</Label>
+                        <Input
+                          type="number"
+                          min={1}
+                          max={10}
+                          value={selectedCabinet.rows || 4}
+                          onChange={(e) => updateCabinetMutation.mutate({ 
+                            id: selectedCabinet.id, 
+                            data: { rows: parseInt(e.target.value) || 1 }
+                          })}
+                        />
+                      </div>
+                      <div>
+                        <Label>Fächer pro Reihe</Label>
+                        <Input
+                          type="number"
+                          min={1}
+                          max={12}
+                          value={selectedCabinet.columns || 6}
+                          onChange={(e) => updateCabinetMutation.mutate({ 
+                            id: selectedCabinet.id, 
+                            data: { columns: parseInt(e.target.value) || 1 }
+                          })}
+                        />
+                      </div>
+                    </div>
+                    <Button 
+                      variant="destructive" 
+                      size="sm"
+                      onClick={() => {
+                        deleteCabinetMutation.mutate(selectedCabinet.id);
+                        setSelectedCabinetId(null);
+                      }}
+                    >
+                      <Trash2 className="w-4 h-4 mr-1" />
+                      Schrank löschen
+                    </Button>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg">Toner-Positionen festlegen</CardTitle>
+                    <p className="text-sm text-slate-500">Klicke auf ein Fach, um einen Toner zuzuweisen</p>
+                  </CardHeader>
+                  <CardContent>
+                    <ShelfGrid
+                      rows={selectedCabinet.rows || 4}
+                      columns={selectedCabinet.columns || 6}
+                      positions={positions.filter(p => p.cabinet_id === selectedCabinet.id)}
+                      toners={toners}
+                      onCellClick={handleCellClick}
+                      editable
+                      cabinetName={selectedCabinet.name}
+                    />
+                  </CardContent>
+                </Card>
+              </>
+            )}
           </TabsContent>
 
           {/* Hersteller Tab */}
@@ -575,11 +647,12 @@ export default function Admin() {
             <DialogFooter>
               <Button variant="outline" onClick={() => setSelectedCell(null)}>Abbrechen</Button>
               <Button 
-                onClick={() => updatePositionMutation.mutate({
-                  row: selectedCell.row,
-                  column: selectedCell.column,
-                  toner_id: selectedCell.toner_id
-                })}
+              onClick={() => updatePositionMutation.mutate({
+                cabinet_id: selectedCell.cabinet_id,
+                row: selectedCell.row,
+                column: selectedCell.column,
+                toner_id: selectedCell.toner_id
+              })}
                 disabled={updatePositionMutation.isPending}
               >
                 {updatePositionMutation.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
@@ -861,6 +934,7 @@ export default function Admin() {
                     <SelectItem value="cyan">Cyan</SelectItem>
                     <SelectItem value="magenta">Magenta</SelectItem>
                     <SelectItem value="gelb">Gelb</SelectItem>
+                    <SelectItem value="resttonerbehälter">Resttonerbehälter</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -930,6 +1004,7 @@ export default function Admin() {
                       <SelectItem value="cyan">Cyan</SelectItem>
                       <SelectItem value="magenta">Magenta</SelectItem>
                       <SelectItem value="gelb">Gelb</SelectItem>
+                      <SelectItem value="resttonerbehälter">Resttonerbehälter</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
