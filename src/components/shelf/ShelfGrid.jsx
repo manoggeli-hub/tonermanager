@@ -8,8 +8,7 @@ export default function ShelfGrid({
   columns, 
   positions, 
   toners, 
-  highlightTonerId,
-  highlightTonerIds = [], 
+  highlightTonerId, 
   onCellClick,
   editable = false 
 }) {
@@ -51,8 +50,7 @@ export default function ShelfGrid({
                 {Array.from({ length: columns }).map((_, colIndex) => {
                   const position = getPositionData(rowIndex, colIndex);
                   const toner = getTonerForPosition(position);
-                  const isHighlighted = (highlightTonerId && toner?.id === highlightTonerId) || 
-                    (highlightTonerIds.length > 0 && highlightTonerIds.includes(toner?.id));
+                  const isHighlighted = highlightTonerId && toner?.id === highlightTonerId;
 
                   return (
                     <motion.button
