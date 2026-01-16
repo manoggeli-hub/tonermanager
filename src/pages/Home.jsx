@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { base44 } from '@/api/base44Client';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, Package, Loader2 } from 'lucide-react';
+import { ArrowLeft, Printer, Loader2 } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import PrinterSelector from '@/components/printer/PrinterSelector';
 import ShelfGrid from '@/components/shelf/ShelfGrid';
@@ -70,6 +70,13 @@ export default function Home() {
       model: `${info.manufacturerName} ${info.modelName}`.trim(),
       image_url: printerModel?.image_url
     };
+  }).sort((a, b) => a.name.localeCompare(b.name));
+
+  const queryClient = useQueryClient();
+
+  const updateTonerStock = useMutation({
+    mutationFn: ({ id, stock }) => base44.entities.Toner.update(id, { stock }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['toners'] })
   });
 
   const selectedToners = selectedPrinter ? getTonersForPrinter(selectedPrinter) : [];
@@ -99,8 +106,8 @@ export default function Home() {
           animate={{ opacity: 1, y: 0 }}
           className="text-center mb-8">
 
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 shadow-lg mb-4">
-            <Package className="w-8 h-8 text-white" />
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl shadow-lg mb-4" style={{ backgroundColor: '#FFCB00' }}>
+            <Printer className="w-8 h-8 text-slate-800" />
           </div>
           <h1 className="text-2xl font-bold text-slate-800">Toner-Lager</h1>
           <p className="text-slate-500 mt-1">Finde den richtigen Toner für deinen Drucker</p>
@@ -150,27 +157,16 @@ export default function Home() {
               {/* Toner Info */}
               {selectedToners.length > 0 ?
             <>
-                  <div className="text-center">
-                    <motion.div
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  transition={{ type: "spring", delay: 0.2 }}
-                  className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-green-100 text-green-700 font-medium">
-
-                      <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-                      {selectedToners.length === 1 ? 'Toner gefunden!' : `${selectedToners.length} Toner gefunden!`}
-                    </motion.div>
-                  </div>
-
                   <div className="space-y-4">
-                    {selectedToners.map((toner, index) =>
-                <TonerCard
-                  key={toner.id}
-                  toner={toner}
-                  position={getTonerPosition(toner)}
-                  isHighlighted />
-
-                )}
+                    {selectedToners.map((toner) =>
+                      <TonerCard
+                        key={toner.id}
+                        toner={toner}
+                        position={getTonerPosition(toner)}
+                        isHighlighted
+                        onStockChange={(newStock) => updateTonerStock.mutate({ id: toner.id, stock: newStock })}
+                      />
+                    )}
                   </div>
 
                   {/* Regal-Ansicht */}
