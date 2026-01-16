@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Package, MapPin, Plus, Minus } from 'lucide-react';
+import { Package, MapPin, Plus, Minus, Trash2 } from 'lucide-react';
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 
@@ -10,7 +10,8 @@ export default function TonerCard({ toner, position, isHighlighted, onStockChang
       schwarz: 'from-slate-700 to-slate-900',
       cyan: 'from-cyan-400 to-cyan-600',
       magenta: 'from-pink-400 to-pink-600',
-      gelb: 'from-yellow-300 to-yellow-500'
+      gelb: 'from-yellow-300 to-yellow-500',
+      resttonerbehälter: 'from-emerald-500 to-emerald-700'
     };
     return colors[toner?.color] || 'from-slate-400 to-slate-600';
   };
@@ -34,8 +35,14 @@ export default function TonerCard({ toner, position, isHighlighted, onStockChang
       <div className={cn("flex items-start justify-between", getTextColor())}>
         <div>
           <div className="flex items-center gap-2 mb-2">
-            <Package className="w-6 h-6" />
-            <span className="text-sm font-medium opacity-80">Toner</span>
+            {toner.color === 'resttonerbehälter' ? (
+              <Trash2 className="w-6 h-6" />
+            ) : (
+              <Package className="w-6 h-6" />
+            )}
+            <span className="text-sm font-medium opacity-80">
+              {toner.color === 'resttonerbehälter' ? 'Resttonerbehälter' : 'Toner'}
+            </span>
           </div>
           <h3 className="text-2xl font-bold mb-1">{toner.model}</h3>
           <p className="text-sm opacity-80">{toner.name}</p>
