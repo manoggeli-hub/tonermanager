@@ -64,9 +64,11 @@ export default function Home() {
   // Prepare printers with display info for selector
   const printersWithInfo = printers.map(p => {
     const info = getPrinterDisplayInfo(p);
+    const printerModel = printerModels.find(m => m.id === p.printer_model_id);
     return {
       ...p,
-      model: `${info.manufacturerName} ${info.modelName}`.trim()
+      model: `${info.manufacturerName} ${info.modelName}`.trim(),
+      image_url: printerModel?.image_url
     };
   });
 
