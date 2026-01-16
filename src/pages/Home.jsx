@@ -44,11 +44,11 @@ export default function Home() {
 
   const shelfConfig = shelfConfigs[0] || { rows: 4, columns: 6 };
 
-  // Get toners for selected printer via PrinterModel
-  const getTonersForPrinter = (printer) => {
+  // Get toner for selected printer via PrinterModel
+  const getTonerForPrinter = (printer) => {
     const printerModel = printerModels.find(m => m.id === printer?.printer_model_id);
-    if (!printerModel?.toner_ids || printerModel.toner_ids.length === 0) return [];
-    return printerModel.toner_ids.map(id => toners.find(t => t.id === id)).filter(Boolean);
+    if (!printerModel?.toner_id) return null;
+    return toners.find(t => t.id === printerModel.toner_id);
   };
 
   // Get display info for printer
@@ -64,19 +64,17 @@ export default function Home() {
   // Prepare printers with display info for selector
   const printersWithInfo = printers.map(p => {
     const info = getPrinterDisplayInfo(p);
-    const printerModel = printerModels.find(m => m.id === p.printer_model_id);
     return {
       ...p,
-      model: `${info.manufacturerName} ${info.modelName}`.trim(),
-      image_url: printerModel?.image_url
+      model: `${info.manufacturerName} ${info.modelName}`.trim()
     };
   });
 
-  const selectedToners = selectedPrinter ? getTonersForPrinter(selectedPrinter) : [];
+  const selectedToner = selectedPrinter ? getTonerForPrinter(selectedPrinter) : null;
 
-  const getTonerPosition = (toner) => positions.find(p => p.toner_id === toner?.id);
-  
-  const highlightTonerIds = selectedToners.map(t => t.id);
+  const tonerPosition = selectedToner 
+    ? positions.find(p => p.toner_id === selectedToner.id)
+    : null;
 
   const isLoading = loadingPrinters || loadingToners;
 
@@ -148,7 +146,7 @@ export default function Home() {
               </div>
 
               {/* Toner Info */}
-              {selectedToners.length > 0 ? (
+              {selectedToner ? (
                 <>
                   <div className="text-center">
                     <motion.div
@@ -158,20 +156,15 @@ export default function Home() {
                       className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-green-100 text-green-700 font-medium"
                     >
                       <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-                      {selectedToners.length === 1 ? 'Toner gefunden!' : `${selectedToners.length} Toner gefunden!`}
+                      Toner gefunden!
                     </motion.div>
                   </div>
 
-                  <div className="space-y-4">
-                    {selectedToners.map((toner, index) => (
-                      <TonerCard 
-                        key={toner.id}
-                        toner={toner} 
-                        position={getTonerPosition(toner)}
-                        isHighlighted 
-                      />
-                    ))}
-                  </div>
+                  <TonerCard 
+                    toner={selectedToner} 
+                    position={tonerPosition}
+                    isHighlighted 
+                  />
 
                   {/* Regal-Ansicht */}
                   <div>
@@ -183,7 +176,7 @@ export default function Home() {
                       columns={shelfConfig.columns}
                       positions={positions}
                       toners={toners}
-                      highlightTonerIds={highlightTonerIds}
+                      highlightTonerId={selectedToner.id}
                     />
                   </div>
                 </>
