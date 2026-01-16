@@ -1,7 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { cn } from "@/lib/utils";
-import { Package } from 'lucide-react';
+import { Package, Trash2 } from 'lucide-react';
 
 export default function ShelfGrid({ 
   rows, 
@@ -11,7 +11,8 @@ export default function ShelfGrid({
   highlightTonerId,
   highlightTonerIds = [], 
   onCellClick,
-  editable = false 
+  editable = false,
+  cabinetName
 }) {
   const getPositionData = (row, col) => {
     return positions.find(p => p.row === row && p.column === col);
@@ -23,21 +24,27 @@ export default function ShelfGrid({
   };
 
   const getTonerColor = (toner) => {
-    if (!toner) return 'bg-slate-100';
+    if (!toner) return 'bg-slate-600';
     const colors = {
       schwarz: 'bg-slate-800',
       cyan: 'bg-cyan-500',
       magenta: 'bg-pink-500',
-      gelb: 'bg-yellow-400'
+      gelb: 'bg-yellow-400',
+      resttonerbehälter: 'bg-emerald-600'
     };
     return colors[toner.color] || 'bg-slate-400';
   };
 
   return (
     <div className="relative">
-      {/* Regal-Rahmen */}
-      <div className="bg-gradient-to-b from-amber-800 to-amber-900 p-3 rounded-xl shadow-2xl">
-        <div className="bg-amber-950/30 rounded-lg p-2">
+      {/* Schrank-Rahmen */}
+      <div className="bg-gradient-to-b from-slate-600 to-slate-700 p-3 rounded-xl shadow-2xl">
+        {cabinetName && (
+          <div className="text-center text-white text-sm font-medium mb-2 opacity-80">
+            {cabinetName}
+          </div>
+        )}
+        <div className="bg-slate-800/50 rounded-lg p-2">
           <div 
             className="grid gap-2"
             style={{ gridTemplateRows: `repeat(${rows}, 1fr)` }}
@@ -71,9 +78,9 @@ export default function ShelfGrid({
                       className={cn(
                         "aspect-square min-h-[60px] rounded-lg border-2 transition-all duration-200",
                         "flex flex-col items-center justify-center p-1",
-                        editable && "cursor-pointer hover:border-amber-400",
+                        editable && "cursor-pointer hover:border-slate-400",
                         !editable && !toner && "cursor-default",
-                        toner ? "border-amber-600/50 bg-amber-100/90" : "border-amber-700/30 bg-amber-100/50",
+                        toner ? "border-slate-500/50 bg-slate-200" : "border-slate-600/50 bg-slate-700/50",
                         isHighlighted && "ring-4 ring-green-400 border-green-500 bg-green-50"
                       )}
                     >
@@ -83,10 +90,14 @@ export default function ShelfGrid({
                             "w-8 h-8 rounded-md flex items-center justify-center mb-1",
                             getTonerColor(toner)
                           )}>
-                            <Package className={cn(
-                              "w-5 h-5",
-                              toner.color === 'gelb' ? 'text-amber-900' : 'text-white'
-                            )} />
+                            {toner.color === 'resttonerbehälter' ? (
+                              <Trash2 className="w-5 h-5 text-white" />
+                            ) : (
+                              <Package className={cn(
+                                "w-5 h-5",
+                                toner.color === 'gelb' ? 'text-amber-900' : 'text-white'
+                              )} />
+                            )}
                           </div>
                           <span className="text-[10px] font-medium text-slate-700 truncate w-full text-center">
                             {toner.model}
@@ -106,10 +117,10 @@ export default function ShelfGrid({
         </div>
       </div>
       
-      {/* Regal-Füße */}
+      {/* Schrank-Füße */}
       <div className="flex justify-between px-4 -mt-1">
-        <div className="w-8 h-4 bg-gradient-to-b from-amber-800 to-amber-950 rounded-b-lg" />
-        <div className="w-8 h-4 bg-gradient-to-b from-amber-800 to-amber-950 rounded-b-lg" />
+        <div className="w-8 h-4 bg-gradient-to-b from-slate-700 to-slate-900 rounded-b-lg" />
+        <div className="w-8 h-4 bg-gradient-to-b from-slate-700 to-slate-900 rounded-b-lg" />
       </div>
     </div>
   );
