@@ -38,7 +38,7 @@ export default function Admin() {
   const [newToner, setNewToner] = useState({ model: '', name: '', color: 'schwarz', stock: 0, image_url: '' });
   const [newPrinter, setNewPrinter] = useState({ name: '', printer_model_id: '' });
   const [newManufacturer, setNewManufacturer] = useState({ name: '' });
-  const [newPrinterModel, setNewPrinterModel] = useState({ name: '', manufacturer_id: '', toner_id: '', image_url: '' });
+  const [newPrinterModel, setNewPrinterModel] = useState({ name: '', manufacturer_id: '', toner_ids: [], image_url: '' });
 
   // Queries
   const { data: toners = [], isLoading: loadingToners } = useQuery({
@@ -125,7 +125,7 @@ export default function Admin() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['printerModels'] });
       setShowPrinterModelDialog(false);
-      setNewPrinterModel({ name: '', manufacturer_id: '', toner_id: '', image_url: '' });
+      setNewPrinterModel({ name: '', manufacturer_id: '', toner_ids: [], image_url: '' });
     }
   });
 
@@ -385,7 +385,7 @@ export default function Admin() {
                   <div key={manufacturer.id} className="space-y-2">
                     <h3 className="text-sm font-medium text-slate-500 mt-4">{manufacturer.name}</h3>
                     {models.map((model) => {
-                      const toner = toners.find(t => t.id === model.toner_id);
+                      const modelToners = (model.toner_ids || []).map(id => toners.find(t => t.id === id)).filter(Boolean);
                       return (
                         <motion.div
                           key={model.id}
@@ -402,8 +402,10 @@ export default function Admin() {
                           )}
                           <div className="flex-1">
                             <div className="font-medium">{model.name}</div>
-                            {toner && (
-                              <div className="text-sm text-slate-500">Toner: {toner.model}</div>
+                            {modelToners.length > 0 && (
+                              <div className="text-sm text-slate-500">
+                                Toner: {modelToners.map(t => t.model).join(', ')}
+                              </div>
                             )}
                           </div>
                           <Button variant="ghost" size="icon" onClick={() => setEditingPrinterModel(model)}>
@@ -677,21 +679,27 @@ export default function Admin() {
                 />
               </div>
               <div>
-                <Label>Benötigter Toner</Label>
-                <Select
-                  value={newPrinterModel.toner_id || 'none'}
-                  onValueChange={(value) => setNewPrinterModel({...newPrinterModel, toner_id: value === 'none' ? '' : value})}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Toner auswählen" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="none">Kein Toner</SelectItem>
-                    {toners.map(t => (
-                      <SelectItem key={t.id} value={t.id}>{t.model} - {t.name}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <Label>Benötigte Toner</Label>
+                <div className="space-y-2 mt-2 max-h-40 overflow-y-auto border rounded-lg p-2">
+                  {toners.map(t => (
+                    <label key={t.id} className="flex items-center gap-2 cursor-pointer hover:bg-slate-50 p-1 rounded">
+                      <input
+                        type="checkbox"
+                        checked={newPrinterModel.toner_ids?.includes(t.id)}
+                        onChange={(e) => {
+                          const ids = newPrinterModel.toner_ids || [];
+                          if (e.target.checked) {
+                            setNewPrinterModel({...newPrinterModel, toner_ids: [...ids, t.id]});
+                          } else {
+                            setNewPrinterModel({...newPrinterModel, toner_ids: ids.filter(id => id !== t.id)});
+                          }
+                        }}
+                        className="rounded"
+                      />
+                      <span className="text-sm">{t.model} - {t.name}</span>
+                    </label>
+                  ))}
+                </div>
               </div>
               <div>
                 <Label>Bild</Label>
@@ -746,21 +754,27 @@ export default function Admin() {
                   />
                 </div>
                 <div>
-                  <Label>Benötigter Toner</Label>
-                  <Select
-                    value={editingPrinterModel.toner_id || 'none'}
-                    onValueChange={(value) => setEditingPrinterModel({...editingPrinterModel, toner_id: value === 'none' ? '' : value})}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Toner auswählen" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="none">Kein Toner</SelectItem>
-                      {toners.map(t => (
-                        <SelectItem key={t.id} value={t.id}>{t.model} - {t.name}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <Label>Benötigte Toner</Label>
+                  <div className="space-y-2 mt-2 max-h-40 overflow-y-auto border rounded-lg p-2">
+                    {toners.map(t => (
+                      <label key={t.id} className="flex items-center gap-2 cursor-pointer hover:bg-slate-50 p-1 rounded">
+                        <input
+                          type="checkbox"
+                          checked={(editingPrinterModel.toner_ids || []).includes(t.id)}
+                          onChange={(e) => {
+                            const ids = editingPrinterModel.toner_ids || [];
+                            if (e.target.checked) {
+                              setEditingPrinterModel({...editingPrinterModel, toner_ids: [...ids, t.id]});
+                            } else {
+                              setEditingPrinterModel({...editingPrinterModel, toner_ids: ids.filter(id => id !== t.id)});
+                            }
+                          }}
+                          className="rounded"
+                        />
+                        <span className="text-sm">{t.model} - {t.name}</span>
+                      </label>
+                    ))}
+                  </div>
                 </div>
                 <div>
                   <Label>Bild</Label>
@@ -779,7 +793,7 @@ export default function Admin() {
                   data: { 
                     name: editingPrinterModel.name,
                     manufacturer_id: editingPrinterModel.manufacturer_id,
-                    toner_id: editingPrinterModel.toner_id,
+                    toner_ids: editingPrinterModel.toner_ids,
                     image_url: editingPrinterModel.image_url
                   }
                 })}
