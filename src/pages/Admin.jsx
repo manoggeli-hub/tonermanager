@@ -37,7 +37,7 @@ export default function Admin() {
   // New entity states
   const [newToner, setNewToner] = useState({ model: '', name: '', color: 'schwarz', stock: 0, image_url: '' });
   const [newPrinter, setNewPrinter] = useState({ name: '', printer_model_id: '' });
-  const [newManufacturer, setNewManufacturer] = useState({ name: '' });
+  const [newManufacturer, setNewManufacturer] = useState({ name: '', logo_url: '' });
   const [newPrinterModel, setNewPrinterModel] = useState({ name: '', manufacturer_id: '', toner_ids: [], image_url: '' });
 
   // Queries
@@ -102,7 +102,7 @@ export default function Admin() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['manufacturers'] });
       setShowManufacturerDialog(false);
-      setNewManufacturer({ name: '' });
+      setNewManufacturer({ name: '', logo_url: '' });
     }
   });
 
@@ -340,9 +340,13 @@ export default function Admin() {
                     animate={{ opacity: 1 }}
                     className="bg-white rounded-xl p-4 border border-slate-100 flex items-center gap-4"
                   >
-                    <div className="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center">
-                      <Building2 className="w-5 h-5 text-blue-600" />
-                    </div>
+                    {manufacturer.logo_url ? (
+                      <img src={manufacturer.logo_url} alt={manufacturer.name} className="w-10 h-10 rounded-lg object-contain" />
+                    ) : (
+                      <div className="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center">
+                        <Building2 className="w-5 h-5 text-blue-600" />
+                      </div>
+                    )}
                     <div className="flex-1">
                       <div className="font-medium">{manufacturer.name}</div>
                       <div className="text-sm text-slate-500">{modelCount} Modell(e)</div>
@@ -600,6 +604,13 @@ export default function Admin() {
                   placeholder="z.B. Brother, HP, Canon"
                 />
               </div>
+              <div>
+                <Label>Logo</Label>
+                <ImageUpload
+                  value={newManufacturer.logo_url}
+                  onChange={(url) => setNewManufacturer({...newManufacturer, logo_url: url})}
+                />
+              </div>
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setShowManufacturerDialog(false)}>Abbrechen</Button>
@@ -629,6 +640,13 @@ export default function Admin() {
                     onChange={(e) => setEditingManufacturer({...editingManufacturer, name: e.target.value})}
                   />
                 </div>
+                <div>
+                  <Label>Logo</Label>
+                  <ImageUpload
+                    value={editingManufacturer.logo_url}
+                    onChange={(url) => setEditingManufacturer({...editingManufacturer, logo_url: url})}
+                  />
+                </div>
               </div>
             )}
             <DialogFooter>
@@ -636,7 +654,7 @@ export default function Admin() {
               <Button 
                 onClick={() => updateManufacturerMutation.mutate({ 
                   id: editingManufacturer.id, 
-                  data: { name: editingManufacturer.name }
+                  data: { name: editingManufacturer.name, logo_url: editingManufacturer.logo_url }
                 })}
                 disabled={updateManufacturerMutation.isPending}
               >
