@@ -52,7 +52,7 @@ export default function Layout({ children, currentPageName }) {
       <aside className="hidden md:fixed md:flex md:flex-col md:left-0 md:top-0 md:h-screen md:w-64 bg-white border-r border-slate-200 z-40">
         <div className="p-6 border-b border-slate-100">
           <div className="flex items-center gap-3">
-            <div className="bg-[#0FFCB00] rounded-xl w-10 h-10 from-indigo-500 to-purple-600 flex items-center justify-center">
+            <div className="bg-[#FFCB00] rounded-xl w-10 h-10 from-indigo-500 to-purple-600 flex items-center justify-center">
               <Package className="w-5 h-5 text-white" />
             </div>
             <div>
