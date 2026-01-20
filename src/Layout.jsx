@@ -106,8 +106,8 @@ export default function Layout({ children, currentPageName }) {
           </aside>}
 
           {/* Main Content */}
-          <main className={user ? "md:ml-64 pb-20 md:pb-0" : ""}
-        {children}
+          <main className={user ? "md:ml-64 pb-20 md:pb-0" : ""}>
+                    {children}
       </main>
     </div>
   );
