@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from './utils';
 import { base44 } from '@/api/base44Client';
-import { Package, Settings, Menu, X } from 'lucide-react';
+import { Package, Settings, Menu, X, Archive } from 'lucide-react';
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 
@@ -17,9 +17,9 @@ export default function Layout({ children, currentPageName }) {
   const isAdmin = user?.role === 'admin';
 
   const navItems = [
-    { name: 'Home', icon: Package, label: 'Toner finden', show: true },
-    { name: 'Admin', icon: Settings, label: 'Verwaltung', show: isAdmin }
-  ];
+        { name: 'Home', icon: Package, label: 'Toner finden', show: true },
+        { name: 'Admin', icon: Archive, label: 'Verwaltung', show: isAdmin }
+      ];
 
   return (
     <div className="min-h-screen bg-slate-50">

@@ -44,16 +44,16 @@ export default function ShelfGrid({
             {cabinetName}
           </div>
         )}
-        <div className="bg-slate-800/50 rounded-lg p-2">
+        <div className="bg-slate-800/50 rounded-lg p-2 overflow-x-auto">
           <div 
             className="grid gap-2"
-            style={{ gridTemplateRows: `repeat(${rows}, 1fr)` }}
+            style={{ gridTemplateRows: `repeat(${rows}, 1fr)`, minWidth: `${columns * 70}px` }}
           >
             {Array.from({ length: rows }).map((_, rowIndex) => (
               <div 
                 key={rowIndex}
                 className="grid gap-2"
-                style={{ gridTemplateColumns: `repeat(${columns}, 1fr)` }}
+                style={{ gridTemplateColumns: `repeat(${columns}, minmax(60px, 1fr))` }}
               >
                 {Array.from({ length: columns }).map((_, colIndex) => {
                   const position = getPositionData(rowIndex, colIndex);

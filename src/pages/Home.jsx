@@ -80,6 +80,12 @@ export default function Home() {
   const selectedToners = selectedPrinter ? getTonersForPrinter(selectedPrinter) : [];
 
   const getTonerPosition = (toner) => positions.find((p) => p.toner_id === toner?.id);
+  
+  const getCabinetName = (position) => {
+    if (!position?.cabinet_id) return null;
+    const cabinet = cabinets.find(c => c.id === position.cabinet_id);
+    return cabinet?.name || null;
+  };
 
   const highlightTonerIds = selectedToners.map((t) => t.id);
 
@@ -156,15 +162,19 @@ export default function Home() {
               {selectedToners.length > 0 ?
             <>
                   <div className="space-y-4">
-                    {selectedToners.map((toner) =>
-                      <TonerCard
-                        key={toner.id}
-                        toner={toner}
-                        position={getTonerPosition(toner)}
-                        isHighlighted
-                        onStockChange={(newStock) => updateTonerStock.mutate({ id: toner.id, stock: newStock })}
-                      />
-                    )}
+                    {selectedToners.map((toner) => {
+                      const pos = getTonerPosition(toner);
+                      return (
+                        <TonerCard
+                          key={toner.id}
+                          toner={toner}
+                          position={pos}
+                          cabinetName={getCabinetName(pos)}
+                          isHighlighted
+                          onStockChange={(newStock) => updateTonerStock.mutate({ id: toner.id, stock: newStock })}
+                        />
+                      );
+                    })}
                   </div>
 
                   {/* Schrank-Ansicht */}

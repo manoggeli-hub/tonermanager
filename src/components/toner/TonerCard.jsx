@@ -4,7 +4,7 @@ import { Package, MapPin, Plus, Minus, Trash2 } from 'lucide-react';
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 
-export default function TonerCard({ toner, position, isHighlighted, onStockChange }) {
+export default function TonerCard({ toner, position, cabinetName, isHighlighted, onStockChange }) {
   const getTonerColor = () => {
     const colors = {
       schwarz: 'from-slate-700 to-slate-900',
@@ -51,7 +51,7 @@ export default function TonerCard({ toner, position, isHighlighted, onStockChang
         {position && (
           <div className="bg-white/20 backdrop-blur-sm rounded-xl p-3 text-center">
             <MapPin className="w-5 h-5 mx-auto mb-1" />
-            <div className="text-xs opacity-80">Regal</div>
+            {cabinetName && <div className="text-xs opacity-80">{cabinetName}</div>}
             <div className="text-lg font-bold">
               {String.fromCharCode(65 + position.row)}{position.column + 1}
             </div>
