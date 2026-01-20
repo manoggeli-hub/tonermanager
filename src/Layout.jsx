@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from './utils';
 import { base44 } from '@/api/base44Client';
-import { Package, Settings, Menu, X, Archive } from 'lucide-react';
+import { Package, Settings, Menu, X, Archive, Printer } from 'lucide-react';
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 
@@ -52,8 +52,8 @@ export default function Layout({ children, currentPageName }) {
       <aside className="hidden md:fixed md:flex md:flex-col md:left-0 md:top-0 md:h-screen md:w-64 bg-white border-r border-slate-200 z-40">
         <div className="p-6 border-b border-slate-100">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center">
-              <Package className="w-5 h-5 text-white" />
+            <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ backgroundColor: '#FFCB00' }}>
+                    <Printer className="w-5 h-5 text-slate-800" />
             </div>
             <div>
               <h1 className="font-bold text-slate-800">Toner-Lager</h1>
