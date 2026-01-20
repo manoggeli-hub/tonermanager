@@ -24,7 +24,7 @@ export default function Layout({ children, currentPageName }) {
   return (
     <div className="min-h-screen bg-slate-50">
       {/* Bottom Navigation für Mobile */}
-      <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 z-50 md:hidden">
+      {user && <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 z-50 md:hidden">
         <div className="flex justify-around items-center h-16 px-4">
           {navItems.filter(n => n.show).map((item) => {
             const Icon = item.icon;
@@ -46,10 +46,10 @@ export default function Layout({ children, currentPageName }) {
             );
           })}
         </div>
-      </nav>
+        </nav>}
 
-      {/* Desktop Sidebar */}
-      <aside className="hidden md:fixed md:flex md:flex-col md:left-0 md:top-0 md:h-screen md:w-64 bg-white border-r border-slate-200 z-40">
+        {/* Desktop Sidebar */}
+        {user && <aside className="hidden md:fixed md:flex md:flex-col md:left-0 md:top-0 md:h-screen md:w-64 bg-white border-r border-slate-200 z-40">
         <div className="p-6 border-b border-slate-100">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ backgroundColor: '#FFCB00' }}>
@@ -102,11 +102,11 @@ export default function Layout({ children, currentPageName }) {
               </div>
             </div>
           </div>
-        )}
-      </aside>
+          )}
+          </aside>}
 
-      {/* Main Content */}
-      <main className="md:ml-64 pb-20 md:pb-0">
+          {/* Main Content */}
+          <main className={user ? "md:ml-64 pb-20 md:pb-0" : ""}
         {children}
       </main>
     </div>

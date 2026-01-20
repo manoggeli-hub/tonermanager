@@ -86,19 +86,27 @@ export default function ShelfGrid({
                     >
                       {toner ? (
                         <>
-                          <div className={cn(
-                            "w-8 h-8 rounded-md flex items-center justify-center mb-1",
-                            getTonerColor(toner)
-                          )}>
-                            {toner.color === 'resttonerbehälter' ? (
-                              <Trash2 className="w-5 h-5 text-white" />
-                            ) : (
-                              <Package className={cn(
-                                "w-5 h-5",
-                                toner.color === 'gelb' ? 'text-amber-900' : 'text-white'
-                              )} />
-                            )}
-                          </div>
+                          {toner.image_url ? (
+                            <img 
+                              src={toner.image_url} 
+                              alt={toner.model} 
+                              className="w-10 h-10 rounded-md object-cover mb-1"
+                            />
+                          ) : (
+                            <div className={cn(
+                              "w-8 h-8 rounded-md flex items-center justify-center mb-1",
+                              getTonerColor(toner)
+                            )}>
+                              {toner.color === 'resttonerbehälter' ? (
+                                <Trash2 className="w-5 h-5 text-white" />
+                              ) : (
+                                <Package className={cn(
+                                  "w-5 h-5",
+                                  toner.color === 'gelb' ? 'text-amber-900' : 'text-white'
+                                )} />
+                              )}
+                            </div>
+                          )}
                           <span className="text-[10px] font-medium text-slate-700 truncate w-full text-center">
                             {toner.model}
                           </span>
