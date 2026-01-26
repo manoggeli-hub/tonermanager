@@ -182,17 +182,18 @@ export default function Home() {
                     <h3 className="text-sm font-medium text-slate-600 mb-3 text-center">
                       Position im Schrank
                     </h3>
-                    <div className="space-y-6">
+                    <div className="space-y-4 flex flex-col items-center">
                       {cabinets.map(cabinet => (
-                        <ShelfGrid
-                          key={cabinet.id}
-                          rows={cabinet.rows || 4}
-                          columns={cabinet.columns || 6}
-                          positions={positions.filter(p => p.cabinet_id === cabinet.id)}
-                          toners={toners}
-                          highlightTonerIds={highlightTonerIds}
-                          cabinetName={cabinet.name}
-                        />
+                        <div key={cabinet.id} className="max-w-xs w-full">
+                          <ShelfGrid
+                            rows={cabinet.rows || 4}
+                            columns={cabinet.columns || 6}
+                            positions={positions.filter(p => p.cabinet_id === cabinet.id)}
+                            toners={toners}
+                            highlightTonerIds={highlightTonerIds}
+                            cabinetName={cabinet.name}
+                          />
+                        </div>
                       ))}
                     </div>
                   </div>
