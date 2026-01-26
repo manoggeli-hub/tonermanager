@@ -82,8 +82,8 @@ export default function ShelfGrid({
                         !editable && !toner && "cursor-default",
                         toner ? "border-slate-500/50 bg-slate-200" : "border-slate-600/50 bg-slate-700/50",
                         isHighlighted && "ring-2 ring-green-400 border-green-500 bg-green-50"
-                      }}
-                    >
+                      )}
+                      >
                       {toner ? (
                       <>
                       {toner.image_url ? (
