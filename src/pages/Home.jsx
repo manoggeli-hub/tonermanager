@@ -2,8 +2,10 @@ import React, { useState } from 'react';
 import { base44 } from '@/api/base44Client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, Printer, Loader2, Package } from 'lucide-react';
+import { ArrowLeft, Printer, Loader2, Package, Search } from 'lucide-react';
 import { Button } from "@/components/ui/button";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Input } from "@/components/ui/input";
 import PrinterSelector from '@/components/printer/PrinterSelector';
 import ShelfGrid from '@/components/shelf/ShelfGrid';
 import TonerCard from '@/components/toner/TonerCard';
@@ -11,6 +13,8 @@ import TonerCard from '@/components/toner/TonerCard';
 export default function Home() {
   const [selectedPrinter, setSelectedPrinter] = useState(null);
   const [searchValue, setSearchValue] = useState('');
+  const [selectedToner, setSelectedToner] = useState(null);
+  const [tonerSearchValue, setTonerSearchValue] = useState('');
 
   const { data: printers = [], isLoading: loadingPrinters } = useQuery({
     queryKey: ['printers'],
@@ -79,6 +83,12 @@ export default function Home() {
 
   const selectedToners = selectedPrinter ? getTonersForPrinter(selectedPrinter) : [];
 
+  const filteredToners = toners.filter(t => {
+    const searchLower = tonerSearchValue.toLowerCase();
+    return t.model?.toLowerCase().includes(searchLower) || 
+           t.name?.toLowerCase().includes(searchLower);
+  });
+
   const getTonerPosition = (toner) => positions.find((p) => p.toner_id === toner?.id);
   
   const getCabinetName = (position) => {
@@ -114,24 +124,31 @@ export default function Home() {
             <Printer className="w-8 h-8 text-slate-800" />
           </div>
           <h1 className="text-2xl font-bold text-slate-800">Toner-Lager</h1>
-          <p className="text-slate-500 mt-1">Finde den richtigen Toner für deinen Drucker</p>
+          <p className="text-slate-500 mt-1">Finde den richtigen Toner</p>
         </motion.div>
 
-        <AnimatePresence mode="wait">
-          {!selectedPrinter ?
-          <motion.div
-            key="selector"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0, x: -50 }}>
+        <Tabs defaultValue="printer" className="mb-6">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="printer">Nach Drucker</TabsTrigger>
+            <TabsTrigger value="toner">Nach Tonermodell</TabsTrigger>
+          </TabsList>
 
-              <PrinterSelector
-              printers={printersWithInfo}
-              onSelect={setSelectedPrinter}
-              searchValue={searchValue}
-              onSearchChange={setSearchValue} />
+          <TabsContent value="printer" className="mt-6">
+            <AnimatePresence mode="wait">
+              {!selectedPrinter ?
+              <motion.div
+                key="selector"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0, x: -50 }}>
 
-            </motion.div> :
+                  <PrinterSelector
+                  printers={printersWithInfo}
+                  onSelect={setSelectedPrinter}
+                  searchValue={searchValue}
+                  onSearchChange={setSearchValue} />
+
+                </motion.div> :
 
           <motion.div
             key="result"
@@ -205,9 +222,118 @@ export default function Home() {
                   <p className="text-sm text-slate-400 mt-1">Bitte kontaktiere den Admin</p>
                 </div>
             }
-            </motion.div>
-          }
-        </AnimatePresence>
+              </motion.div>
+              }
+            </AnimatePresence>
+          </TabsContent>
+
+          <TabsContent value="toner" className="mt-6">
+            <AnimatePresence mode="wait">
+              {!selectedToner ? (
+                <motion.div
+                  key="toner-search"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0, x: -50 }}
+                  className="space-y-4">
+                  
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+                    <Input
+                      placeholder="Tonermodell suchen..."
+                      value={tonerSearchValue}
+                      onChange={(e) => setTonerSearchValue(e.target.value)}
+                      className="pl-10 h-12 text-base"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    {filteredToners.map((toner) => {
+                      const pos = getTonerPosition(toner);
+                      return (
+                        <button
+                          key={toner.id}
+                          onClick={() => setSelectedToner(toner)}
+                          className="w-full bg-white rounded-xl p-4 border border-slate-200 hover:border-slate-300 hover:shadow-md transition-all text-left">
+                          <div className="flex items-center gap-3">
+                            {toner.image_url ? (
+                              <img src={toner.image_url} alt={toner.model} className="w-12 h-12 rounded object-cover" />
+                            ) : (
+                              <div className="w-12 h-12 rounded bg-slate-100 flex items-center justify-center">
+                                <Package className="w-6 h-6 text-slate-400" />
+                              </div>
+                            )}
+                            <div className="flex-1">
+                              <div className="font-semibold text-slate-800">{toner.model}</div>
+                              <div className="text-sm text-slate-500">{toner.name}</div>
+                              <div className="text-sm text-slate-600 mt-1">
+                                Bestand: <span className="font-medium">{toner.stock || 0}</span>
+                              </div>
+                            </div>
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  {filteredToners.length === 0 && tonerSearchValue && (
+                    <div className="text-center py-12 bg-white rounded-2xl border border-slate-100">
+                      <Package className="w-12 h-12 mx-auto mb-3 text-slate-300" />
+                      <p className="text-slate-500">Kein Toner gefunden</p>
+                    </div>
+                  )}
+                </motion.div>
+              ) : (
+                <motion.div
+                  key="toner-detail"
+                  initial={{ opacity: 0, x: 50 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0 }}
+                  className="space-y-6">
+                  
+                  <Button
+                    variant="ghost"
+                    onClick={() => setSelectedToner(null)}
+                    className="flex items-center gap-2 text-slate-600 hover:text-slate-800">
+                    <ArrowLeft className="w-4 h-4" />
+                    Zurück zur Suche
+                  </Button>
+
+                  <TonerCard
+                    toner={selectedToner}
+                    position={getTonerPosition(selectedToner)}
+                    cabinetName={getCabinetName(getTonerPosition(selectedToner))}
+                    isHighlighted
+                    onStockChange={(newStock) => {
+                      updateTonerStock.mutate({ id: selectedToner.id, stock: newStock });
+                      setSelectedToner({...selectedToner, stock: newStock});
+                    }}
+                  />
+
+                  <div>
+                    <h3 className="text-sm font-medium text-slate-600 mb-3 text-center">
+                      Position im Schrank
+                    </h3>
+                    <div className="space-y-4 flex flex-col items-center">
+                      {cabinets.map(cabinet => (
+                        <div key={cabinet.id} className="max-w-xs w-full">
+                          <ShelfGrid
+                            rows={cabinet.rows || 4}
+                            columns={cabinet.columns || 6}
+                            positions={positions.filter(p => p.cabinet_id === cabinet.id)}
+                            toners={toners}
+                            highlightTonerId={selectedToner.id}
+                            cabinetName={cabinet.name}
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </TabsContent>
+        </Tabs>
       </div>
     </div>);
 
