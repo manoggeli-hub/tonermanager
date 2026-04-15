@@ -1,5 +1,4 @@
 import React from 'react';
-import { motion } from 'framer-motion';
 import { cn } from "@/lib/utils";
 import { Package, Trash2 } from 'lucide-react';
 
@@ -62,26 +61,17 @@ export default function ShelfGrid({
                     (highlightTonerIds.length > 0 && highlightTonerIds.includes(toner?.id));
 
                   return (
-                    <motion.button
+                    <button
                       key={`${rowIndex}-${colIndex}`}
                       onClick={() => onCellClick?.(rowIndex, colIndex, position)}
                       disabled={!editable && !onCellClick}
-                      initial={{ scale: 1 }}
-                      animate={{ 
-                        scale: isHighlighted ? [1, 1.05, 1] : 1,
-                        boxShadow: isHighlighted ? '0 0 20px rgba(34, 197, 94, 0.6)' : 'none'
-                      }}
-                      transition={{ 
-                        repeat: isHighlighted ? Infinity : 0, 
-                        duration: 1.5 
-                      }}
                       className={cn(
                         "aspect-square min-h-[45px] rounded-md border transition-all duration-200",
                         "flex flex-col items-center justify-center p-0.5",
                         editable && "cursor-pointer hover:border-slate-400",
                         !editable && !toner && "cursor-default",
                         toner ? "border-slate-500/50 bg-slate-200" : "border-slate-600/50 bg-slate-700/50",
-                        isHighlighted && "ring-2 ring-green-400 border-green-500 bg-green-50"
+                        isHighlighted && "ring-2 ring-green-400 border-green-500 bg-green-50 animate-pulse"
                       )}
                       >
                       {toner ? (
@@ -116,7 +106,7 @@ export default function ShelfGrid({
                       {editable ? '+' : ''}
                       </span>
                       )}
-                    </motion.button>
+                    </button>
                   );
                 })}
               </div>
