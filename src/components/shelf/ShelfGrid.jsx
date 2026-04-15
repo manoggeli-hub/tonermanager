@@ -14,12 +14,12 @@ export default function ShelfGrid({
   cabinetName
 }) {
   const getPositionData = (row, col) => {
-    return positions.find(p => p.row === row && p.column === col);
+    return (positions || []).find(p => p.row === row && p.column === col);
   };
 
   const getTonerForPosition = (position) => {
     if (!position?.toner_id) return null;
-    return toners.find(t => t.id === position.toner_id);
+    return (toners || []).find(t => t.id === position.toner_id);
   };
 
   const getTonerColor = (toner) => {
@@ -64,6 +64,7 @@ export default function ShelfGrid({
                     <button
                       key={`${rowIndex}-${colIndex}`}
                       onClick={() => onCellClick?.(rowIndex, colIndex, position)}
+                      type="button"
                       disabled={!editable && !onCellClick}
                       className={cn(
                         "aspect-square min-h-[45px] rounded-md border transition-all duration-200",
