@@ -19,7 +19,7 @@ export default function ShelfGrid({
 
   const getTonerForPosition = (position) => {
     if (!position?.toner_id) return null;
-    return (toners || []).find(t => t.id === position.toner_id);
+    return (toners || []).find(t => t.id === position.toner_id) ?? null;
   };
 
   const getTonerColor = (toner) => {
@@ -60,6 +60,7 @@ export default function ShelfGrid({
                   const isHighlighted = (highlightTonerId && toner?.id === highlightTonerId) || 
                     (highlightTonerIds.length > 0 && highlightTonerIds.includes(toner?.id));
 
+                  const safeTonerColor = toner?.color ?? '';
                   return (
                     <button
                       key={`${rowIndex}-${colIndex}`}
@@ -88,12 +89,12 @@ export default function ShelfGrid({
                         "w-6 h-6 rounded flex items-center justify-center mb-0.5",
                         getTonerColor(toner)
                       )}>
-                        {toner.color === 'resttonerbehälter' ? (
+                        {safeTonerColor === 'resttonerbehälter' ? (
                           <Trash2 className="w-3.5 h-3.5 text-white" />
                         ) : (
                           <Package className={cn(
                             "w-3.5 h-3.5",
-                            toner.color === 'gelb' ? 'text-amber-900' : 'text-white'
+                            safeTonerColor === 'gelb' ? 'text-amber-900' : 'text-white'
                           )} />
                         )}
                       </div>
