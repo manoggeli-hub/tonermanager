@@ -1,0 +1,31 @@
+{
+  "name": "ShelfPosition",
+  "type": "object",
+  "properties": {
+    "cabinet_id": {
+      "type": "string",
+      "description": "ID des Schranks"
+    },
+    "row": {
+      "type": "number",
+      "description": "Reihe (von oben)"
+    },
+    "column": {
+      "type": "number",
+      "description": "Fach (von links)"
+    },
+    "toner_id": {
+      "type": "string",
+      "description": "ID des gelagerten Toners"
+    },
+    "label": {
+      "type": "string",
+      "description": "Optionale Beschriftung"
+    }
+  },
+  "required": [
+    "cabinet_id",
+    "row",
+    "column"
+  ]
+}

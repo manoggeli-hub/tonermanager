@@ -1,0 +1,23 @@
+{
+  "name": "Cabinet",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Name des Schranks"
+    },
+    "rows": {
+      "type": "number",
+      "default": 4,
+      "description": "Anzahl Reihen"
+    },
+    "columns": {
+      "type": "number",
+      "default": 6,
+      "description": "Anzahl F\u00e4cher pro Reihe"
+    }
+  },
+  "required": [
+    "name"
+  ]
+}

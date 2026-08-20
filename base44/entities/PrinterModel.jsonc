@@ -1,0 +1,29 @@
+{
+  "name": "PrinterModel",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Modellname"
+    },
+    "manufacturer_id": {
+      "type": "string",
+      "description": "ID des Herstellers"
+    },
+    "toner_ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "IDs der zugeh\u00f6rigen Toner"
+    },
+    "image_url": {
+      "type": "string",
+      "description": "Bild des Druckermodells"
+    }
+  },
+  "required": [
+    "name",
+    "manufacturer_id"
+  ]
+}

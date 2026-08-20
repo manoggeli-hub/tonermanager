@@ -1,0 +1,38 @@
+{
+  "name": "Toner",
+  "type": "object",
+  "properties": {
+    "model": {
+      "type": "string",
+      "description": "Tonermodell/Artikelnummer"
+    },
+    "name": {
+      "type": "string",
+      "description": "Bezeichnung"
+    },
+    "color": {
+      "type": "string",
+      "enum": [
+        "schwarz",
+        "cyan",
+        "magenta",
+        "gelb",
+        "resttonerbeh\u00e4lter"
+      ],
+      "description": "Tonerfarbe oder Resttonerbeh\u00e4lter"
+    },
+    "stock": {
+      "type": "number",
+      "default": 0,
+      "description": "Aktueller Bestand"
+    },
+    "image_url": {
+      "type": "string",
+      "description": "Bild des Toners"
+    }
+  },
+  "required": [
+    "model",
+    "name"
+  ]
+}

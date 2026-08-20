@@ -1,0 +1,20 @@
+{
+  "name": "ShelfConfig",
+  "type": "object",
+  "properties": {
+    "rows": {
+      "type": "number",
+      "default": 4,
+      "description": "Anzahl Reihen"
+    },
+    "columns": {
+      "type": "number",
+      "default": 6,
+      "description": "Anzahl F\u00e4cher pro Reihe"
+    }
+  },
+  "required": [
+    "rows",
+    "columns"
+  ]
+}

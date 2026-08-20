@@ -1,0 +1,17 @@
+{
+  "name": "Manufacturer",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Herstellername"
+    },
+    "logo_url": {
+      "type": "string",
+      "description": "Logo des Herstellers"
+    }
+  },
+  "required": [
+    "name"
+  ]
+}

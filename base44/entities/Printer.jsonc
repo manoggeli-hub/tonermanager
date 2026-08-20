@@ -1,0 +1,36 @@
+{
+  "name": "Printer",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Druckername/Standort"
+    },
+    "printer_model_id": {
+      "type": "string",
+      "description": "ID des Druckermodells"
+    }
+  },
+  "required": [
+    "name",
+    "printer_model_id"
+  ],
+  "rls": {
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "read": {},
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}
